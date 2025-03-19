@@ -5,7 +5,7 @@ agent:
     type: f1-standard-2
     os_image: ubuntu2204
 blocks:
-  - name: Test
+  - name: Run Tests and Send Email
     task:
       jobs:
         - name: Test
@@ -16,4 +16,35 @@ blocks:
             - npm install
             - cache store
             - npm run build --if-present
-            - npm test
+            - npm test || export STATUS="failed"
+            - '|'
+            - '              if [ $? -eq 0 ]; then'
+            - '                export STATUS="passed"'
+            - '              else'
+            - '                export STATUS="failed"'
+            - '              fi'
+            - '            - echo "Test Status: $STATUS"'
+            - echo "Sending email with mailer.js..."
+            - '- node mailer.js'
+            - 'echo "Email sent with status: $STATUS"'
+      env_vars:
+        - name: SMTP_HOST
+          value: smtp.gmail.com
+        - name: SMTP_PORT
+          value: '587'
+        - name: SMTP_USER
+          value: fakehrjbackup@gmail.com
+        - name: SMTP_PASS
+          value: asdbvcxz
+        - name: MAIL_TO
+          value: fakehrj@example.com
+        - name: MAIL_FROM
+          value: fakehrjbackup@gmail.com
+        - name: PROJECT_NAME
+          value: Blogger_Hub
+        - name: BRANCH_NAME
+          value: main
+        - name: BUILD_NUMBER
+          value: $SEMAPHORE_WORKFLOW_NUMBER
+        - name: STATUS
+          value: pending
